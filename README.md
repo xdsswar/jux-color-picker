@@ -36,7 +36,10 @@
 
 ## Screenshots
 
-> *Coming soon*
+<p align="center">
+  <img src="Screenshots/dark.png" alt="Dark Theme" width="480" />
+  <img src="Screenshots/light.png" alt="Light Theme" width="480" />
+</p>
 
 ## Keyboard Shortcuts
 
