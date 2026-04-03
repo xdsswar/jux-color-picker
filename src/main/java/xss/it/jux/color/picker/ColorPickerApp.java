@@ -8,8 +8,11 @@ import xss.it.jux.robot.KeyCode;
 import xss.it.jux.robot.Modifier;
 import xss.it.jux.ui.Application;
 import xss.it.jux.ui.Platform;
+import xss.it.jux.ui.animation.PauseTransition;
 import xss.it.jux.ui.gui.Window;
 import xss.it.jux.ui.gui.events.WindowEvent;
+
+import java.time.Duration;
 
 /**
  * Entry point for the Jux Color Picker application.
@@ -83,9 +86,21 @@ public class ColorPickerApp extends Application<Window> {
         // The callback runs on a virtual thread, so we use executeScript
         // to invoke the JS-side quick pick which handles the IPC call.
         GlobalHotkey.register(KeyCode.X, () -> Platform.runLater(() -> {
+
             window.getDocument().executeScript(
                     "if(window.EyeDropper)EyeDropper.quickPick()"
             );
+
+            //Hacky Way to lose focus and not get frozen capture from mouse
+            boolean focused = window.isFocused();
+            if (focused) {
+                PauseTransition pt = new PauseTransition(Duration.ofMillis(60));
+                pt.setOnFinished(window::releaseFocus);
+                window.releaseFocus();
+                pt.play();
+            }
+
+
         }), Modifier.ALT);
     }
 

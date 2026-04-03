@@ -23,12 +23,12 @@
 
 ## Features
 
-- **Live Magnifier Eyedropper** - Click the eyedropper button to activate a real-time zoomed pixel view with crosshair. Click to pick. Alt+X for instant pick at cursor.
+- **Live Magnifier Eyedropper** - Click the eyedropper button to activate a real-time zoomed pixel view with crosshair. Click to pick. Press `Alt+X` (global hotkey) to instantly grab the color under your cursor from anywhere, even when the app is not focused.
 - **Multiple Color Formats** - HEX, RGB, RGBA, HSL, HSB with tab switching and direct input editing.
 - **Saturation-Brightness Canvas** - Full 2D color plane with hue and alpha strips.
 - **Color History** - Tracks your last 30 picked colors with persistent storage across sessions.
-- **Palette Presets** - Material, Tailwind, Pastel, Earth Tones, Neon, and Custom palettes.
-- **Import / Export** - Save and load palettes as JSON files.
+- **Palette Presets** - Material, Tailwind, Pastel, Earth Tones, and Neon palettes.
+- **Import / Export** - Export your color history as a named palette JSON file. Import palettes and they appear in the dropdown automatically, persisted across sessions.
 - **Dark & Light Themes** - Smooth animated theme toggle (Ctrl+T).
 - **Custom Titlebar** - Clean, minimal window chrome with no native decorations.
 - **Keyboard Shortcuts** - Full keyboard workflow for power users.
@@ -42,7 +42,7 @@
 
 | Shortcut | Action |
 |----------|--------|
-| `Alt+X` | Instant color pick at cursor position |
+| `Alt+X` | Instant color pick at cursor position (global — works even when app is unfocused) |
 | `Ctrl+T` | Toggle dark/light theme |
 | `Ctrl+C` | Copy current color value |
 | `Ctrl+I` | Import palette |
@@ -95,6 +95,7 @@ jux-color-picker/
 │   │       ├── ScriptInjector.java         # JS module loading
 │   │       ├── EyeDropperTool.java         # Screen color picker
 │   │       ├── PaletteFileHandler.java     # File dialog I/O
+│   │       ├── PaletteStore.java           # Persistent imported palettes
 │   │       └── HistoryStore.java           # Persistent history
 │   └── resources/web/
 │       ├── index.html                      # Main UI shell

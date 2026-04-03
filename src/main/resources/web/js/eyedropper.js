@@ -111,13 +111,13 @@ window.EyeDropper = (() => {
             btn.classList.remove('border-accent', 'text-accent', 'bg-accent/10');
         }
 
-        // If picking, set the color
-        if (picked && _lastColor) {
-            if (window.ColorPicker) {
-                ColorPicker.setColorFromRGB(_lastColor.r, _lastColor.g, _lastColor.b);
+        // Sync picker UI to the last color seen (whether picked via click or Alt+X)
+        if (_lastColor && window.ColorPicker) {
+            ColorPicker.setColorFromRGB(_lastColor.r, _lastColor.g, _lastColor.b);
+            if (picked) {
                 ColorPicker.commitColor();
+                _showToast('Picked ' + _lastColor.hex);
             }
-            _showToast('Picked ' + _lastColor.hex);
         }
     }
 
@@ -246,12 +246,20 @@ window.EyeDropper = (() => {
     function quickPick() {
         if (typeof __jux === 'undefined') return;
 
-        // If magnifier is active, just pick the current magnifier color
+        // If magnifier is active, pick the current color and stay in capture mode.
+        // Only commit to history — defer the full picker UI update to avoid
+        // blocking the frame loop with canvas redraws.
         if (_active && _lastColor) {
-            stop(true);
+            if (window.ColorHistory) {
+                ColorHistory.addColor(
+                    _lastColor.hex, _lastColor.r, _lastColor.g, _lastColor.b, 1
+                );
+            }
+            _showToast('Picked ' + _lastColor.hex);
             return;
         }
 
+        // Not in magnifier — do a one-shot pick
         __jux.invoke('eyedropper-pick', '{}', function (response) {
             if (!response) return;
             try {
