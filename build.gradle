@@ -1,0 +1,91 @@
+plugins {
+    id 'application'
+    id 'org.beryx.runtime' version '2.0.1'
+}
+
+group = 'xss.it'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['--enable-preview', '-Xlint:all', '-Xlint:-preview']
+}
+
+application {
+    mainClass = 'xss.it.jux.color.picker.ColorPickerApp'
+    applicationDefaultJvmArgs = [
+        '--enable-preview',
+        '--enable-native-access=ALL-UNNAMED',
+    ]
+}
+
+dependencies {
+    implementation files('libs/jux-base-1.0.0.jar')
+    implementation files('libs/jux-core-1.0.0.jar')
+    implementation files('libs/jux-dom-1.0.0.jar')
+    implementation files('libs/jux-ui-1.0.0.jar')
+    implementation files('libs/jux-net-1.0.0.jar')
+    implementation files('libs/jux-robot-1.0.0.jar')
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.2'
+}
+
+// ════════════════════════════════════════════════════════════
+// RUNTIME IMAGE & JPACKAGE (native installer)
+// Uses the org.beryx.runtime plugin to create a custom JRE
+// image and platform-specific installer via jpackage.
+// ════════════════════════════════════════════════════════════
+runtime {
+    options = ['--strip-debug', '--no-header-files', '--no-man-pages']
+
+    modules = [
+            'java.base',
+            'java.desktop',
+            'java.logging',
+            'java.management',
+            'java.net.http',
+            'java.prefs',
+            'jdk.management',
+            'jdk.unsupported',
+    ]
+
+    launcher {
+        noConsole = true
+        jvmArgs = [
+                '--enable-preview',
+                '--enable-native-access=ALL-UNNAMED',
+        ]
+    }
+
+    jpackage {
+        imageName = 'JuxColorPicker'
+        installerName = 'Jux Color Picker'
+        installerOptions = [
+                '--description', 'Jux Color Picker — A modern color picker application',
+                '--copyright', 'Copyright 2026 XTREME SOFTWARE SOLUTIONS',
+                '--app-version', project.version,
+                '--vendor', 'XTREME SOFTWARE SOLUTIONS (XSS&IT)'
+        ] as List<String>
+
+        def os = org.gradle.internal.os.OperatingSystem.current()
+
+        if (os.isWindows()) {
+            imageOptions += ['--icon', "${projectDir}/icon.ico"]
+            installerOptions += [
+                    '--win-per-user-install', '--win-dir-chooser',
+                    '--win-menu', '--win-shortcut'
+            ]
+        }
+    }
+}

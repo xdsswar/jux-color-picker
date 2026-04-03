@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="stylesheet" href="css/fontawesome.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="bg-surface text-primary select-none overflow-hidden h-screen flex flex-col">
+
+    <!-- ═══════════ TITLEBAR ═══════════ -->
+    <header id="titlebar"
+            class="h-10 flex items-center justify-between pl-3 pr-0
+                   bg-titlebar border-b border-divider shrink-0 z-50">
+        <div class="flex items-center gap-2">
+            <img src="icon.png" alt="" class="w-4 h-4" />
+            <nav id="menu-bar" class="flex items-center gap-0.5 text-[11px] font-medium text-secondary">
+                <div class="menu-item relative" data-menu="file">
+                    <button class="px-2 py-0.5 rounded hover:bg-hover transition-colors">File</button>
+                    <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 bg-dropdown border border-divider rounded-lg shadow-xl py-1 z-50 whitespace-nowrap">
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="import-palette">
+                            <i class="fa-solid fa-file-import w-4 text-center text-muted"></i><span>Import Palette</span><span class="ml-auto text-muted text-[10px] pl-4">Ctrl+I</span>
+                        </button>
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="export-palette">
+                            <i class="fa-solid fa-file-export w-4 text-center text-muted"></i><span>Export Palette</span><span class="ml-auto text-muted text-[10px] pl-4">Ctrl+E</span>
+                        </button>
+                        <div class="border-t border-divider my-1"></div>
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="export-current">
+                            <i class="fa-solid fa-copy w-4 text-center text-muted"></i><span>Copy as JSON</span><span class="ml-auto text-muted text-[10px] pl-4">Ctrl+J</span>
+                        </button>
+                        <div class="border-t border-divider my-1"></div>
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="clear-history">
+                            <i class="fa-solid fa-trash-can w-4 text-center text-muted"></i><span>Clear History</span>
+                        </button>
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="clear-palettes">
+                            <i class="fa-solid fa-palette w-4 text-center text-muted"></i><span>Clear Imported Palettes</span>
+                        </button>
+                        <div class="border-t border-divider my-1"></div>
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="preferences">
+                            <i class="fa-solid fa-gear w-4 text-center text-muted"></i><span>Preferences</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="menu-item relative" data-menu="view">
+                    <button class="px-2 py-0.5 rounded hover:bg-hover transition-colors">View</button>
+                    <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 bg-dropdown border border-divider rounded-lg shadow-xl py-1 z-50 whitespace-nowrap">
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="toggle-theme">
+                            <i class="fa-solid fa-circle-half-stroke w-4 text-center text-muted"></i><span>Toggle Theme</span><span class="ml-auto text-muted text-[10px] pl-4">Ctrl+T</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="menu-item relative" data-menu="help">
+                    <button class="px-2 py-0.5 rounded hover:bg-hover transition-colors">Help</button>
+                    <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 bg-dropdown border border-divider rounded-lg shadow-xl py-1 z-50 whitespace-nowrap">
+                        <button class="menu-action w-full text-left px-3 py-1.5 hover:bg-hover transition-colors flex items-center gap-3" data-action="about">
+                            <i class="fa-solid fa-circle-info w-4 text-center text-muted"></i><span>About</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div class="flex items-center">
+            <button id="btn-minimize" class="w-10 h-10 flex items-center justify-center hover:bg-hover transition-colors text-secondary hover:text-primary">
+                <i class="fa-solid fa-minus text-[10px]"></i>
+            </button>
+            <button id="btn-close" class="w-10 h-10 flex items-center justify-center hover:bg-red-500/90 transition-colors text-secondary hover:text-white">
+                <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══════════ MAIN ═══════════ -->
+    <main class="flex-1 overflow-y-auto">
+
+        <!-- ── SB Canvas ── -->
+        <div class="px-4 pt-4 pb-5">
+            <div class="relative rounded-xl overflow-hidden border border-divider shadow-lg">
+                <canvas id="sb-canvas" class="w-full cursor-crosshair block"
+                        style="height: 240px" width="434" height="240"></canvas>
+                <div id="sb-indicator"
+                     class="absolute w-5 h-5 rounded-full border-2 border-white shadow-lg
+                            pointer-events-none ring-1 ring-black/20"
+                     style="top: 0; left: 0; filter: drop-shadow(0 0 3px rgba(0,0,0,0.4))"></div>
+                <!-- Magnifier feed (shown when eyedropper is active) -->
+                <canvas id="magnifier-canvas" class="w-full cursor-pointer block hidden"
+                        style="height: 240px" width="434" height="240"></canvas>
+            </div>
+        </div>
+
+        <!-- ── Eyedropper + Color Swatch + Hue + Alpha ── -->
+        <div class="px-4 pb-5 flex gap-3 items-center">
+            <!-- Eyedropper: click or Alt+X to pick color at cursor -->
+            <button id="btn-eyedropper"
+                    class="w-11 h-11 rounded-lg border-2 border-divider shrink-0
+                           flex items-center justify-center text-muted
+                           hover:border-accent hover:text-accent transition-all
+                           hover:bg-hover active:scale-95"
+                    title="Pick color from screen (Alt+X)">
+                <i class="fa-solid fa-eye-dropper text-sm"></i>
+            </button>
+            <!-- Live color swatch -->
+            <div id="color-swatch"
+                 class="w-11 h-11 rounded-lg border-2 border-divider shadow-inner shrink-0 transition-colors duration-200"
+                 style="background: #6366F1;"></div>
+            <div class="flex-1 flex flex-col gap-2.5 justify-center">
+                <div class="relative" style="height: 16px">
+                    <canvas id="hue-canvas" class="absolute inset-0 w-full h-full rounded-full cursor-pointer"
+                            width="370" height="16"></canvas>
+                    <div id="hue-indicator"
+                         class="absolute w-4 h-4 rounded-full border-2 border-white shadow-md
+                                pointer-events-none ring-1 ring-black/20"
+                         style="top: 0; left: 0"></div>
+                </div>
+                <div class="relative" style="height: 16px">
+                    <canvas id="alpha-canvas" class="absolute inset-0 w-full h-full rounded-full cursor-pointer"
+                            width="370" height="16"></canvas>
+                    <div id="alpha-indicator"
+                         class="absolute w-4 h-4 rounded-full border-2 border-white shadow-md
+                                pointer-events-none ring-1 ring-black/20"
+                         style="top: 0; left: 0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Divider ═══ -->
+        <div class="mx-4 border-t border-divider"></div>
+
+        <!-- ── Format Tabs + Input ── -->
+        <div class="px-4 pt-5 pb-5">
+            <div class="flex gap-0.5 mb-3">
+                <button data-fmt="hex" class="fmt-tab px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all bg-accent text-white">Hex</button>
+                <button data-fmt="rgb" class="fmt-tab px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all text-muted hover:text-primary">RGB</button>
+                <button data-fmt="rgba" class="fmt-tab px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all text-muted hover:text-primary">RGBA</button>
+                <button data-fmt="hsl" class="fmt-tab px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all text-muted hover:text-primary">HSL</button>
+                <button data-fmt="hsb" class="fmt-tab px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all text-muted hover:text-primary">HSB</button>
+                <button id="btn-copy-fmt" class="ml-auto px-2.5 py-1.5 text-muted hover:text-accent transition-colors rounded-md hover:bg-hover"
+                        title="Copy to clipboard">
+                    <i class="fa-solid fa-copy text-sm"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Hex -->
+                <div id="fmt-hex-row" class="flex-1 flex items-center gap-1.5">
+                    <span class="text-sm text-muted font-mono font-bold">#</span>
+                    <input id="input-hex" type="text" value="6366F1" maxlength="8" spellcheck="false"
+                           class="flex-1 h-8 bg-input border border-divider rounded-lg px-2.5
+                                  text-sm font-mono font-semibold text-primary tracking-wider
+                                  focus:border-accent focus:outline-none transition-colors uppercase" />
+                </div>
+                <!-- RGB -->
+                <div id="fmt-rgb-row" class="flex-1 items-center gap-1.5 hidden">
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-red-400 w-3">R</label>
+                        <input id="input-r" type="number" min="0" max="255" value="99"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-green-400 w-3">G</label>
+                        <input id="input-g" type="number" min="0" max="255" value="102"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-blue-400 w-3">B</label>
+                        <input id="input-b" type="number" min="0" max="255" value="241"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                </div>
+                <!-- RGBA -->
+                <div id="fmt-rgba-row" class="flex-1 items-center gap-1.5 hidden">
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-red-400 w-3">R</label>
+                        <input id="input-rgba-r" type="number" min="0" max="255" value="99"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-green-400 w-3">G</label>
+                        <input id="input-rgba-g" type="number" min="0" max="255" value="102"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-blue-400 w-3">B</label>
+                        <input id="input-rgba-b" type="number" min="0" max="255" value="241"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                </div>
+                <!-- HSL -->
+                <div id="fmt-hsl-row" class="flex-1 items-center gap-1.5 hidden">
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-purple-400 w-3">H</label>
+                        <input id="input-h" type="number" min="0" max="360" value="239"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-pink-400 w-3">S</label>
+                        <input id="input-s" type="number" min="0" max="100" value="86"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-amber-400 w-3">L</label>
+                        <input id="input-l" type="number" min="0" max="100" value="67"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                </div>
+                <!-- HSB -->
+                <div id="fmt-hsb-row" class="flex-1 items-center gap-1.5 hidden">
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-purple-400 w-3">H</label>
+                        <input id="input-hsb-h" type="number" min="0" max="360" value="239"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-cyan-400 w-3">S</label>
+                        <input id="input-hsb-s" type="number" min="0" max="100" value="59"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                    <div class="flex-1 flex items-center gap-1">
+                        <label class="text-[10px] font-bold text-orange-400 w-3">B</label>
+                        <input id="input-hsb-b" type="number" min="0" max="100" value="95"
+                               class="fmt-num-input w-full h-8 bg-input border border-divider rounded-lg px-2
+                                      text-xs font-mono font-semibold text-primary text-center
+                                      focus:border-accent focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- Alpha -->
+                <div id="alpha-input-group" class="shrink-0 flex items-center gap-1 hidden">
+                    <input id="input-a" type="number" min="0" max="100" value="100"
+                           class="w-16 h-8 bg-input border border-divider rounded-lg px-2
+                                  text-xs font-mono font-semibold text-primary text-center
+                                  focus:border-accent focus:outline-none" />
+                    <span class="text-[10px] text-muted font-semibold">%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Divider ═══ -->
+        <div class="mx-4 border-t border-divider"></div>
+
+        <!-- ── Last Used (History) ── -->
+        <div class="px-4 pt-5 pb-5">
+            <div class="flex items-center justify-between mb-2.5">
+                <h3 class="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                    Last used <span id="history-count" class="text-muted/40 font-normal">(0)</span>
+                </h3>
+                <button id="btn-clear-history" class="text-[10px] text-muted hover:text-red-400 transition-colors">Clear</button>
+            </div>
+            <div id="history-grid" class="grid grid-cols-10 gap-1.5">
+                <div id="history-empty" class="col-span-10 text-center text-[10px] text-muted/40 py-2 italic">
+                    Pick a color to start
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Divider ═══ -->
+        <div class="mx-4 border-t border-divider"></div>
+
+        <!-- ── Palette ── -->
+        <div class="px-4 pt-5 pb-6">
+            <div class="flex items-center justify-between mb-2.5">
+                <h3 class="text-[10px] font-semibold uppercase tracking-wider text-muted">Palette</h3>
+                <select id="palette-select"
+                        class="bg-input border border-divider rounded-md px-2 py-0.5
+                               text-[10px] text-primary focus:outline-none focus:border-accent cursor-pointer">
+                    <option value="material">Material</option>
+                    <option value="tailwind">Tailwind</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="earth">Earth Tones</option>
+                    <option value="neon">Neon</option>
+                </select>
+            </div>
+            <div id="palette-grid" class="grid grid-cols-10 gap-1.5"></div>
+        </div>
+
+    </main>
+
+    <!-- ═══════════ EXPORT PALETTE NAME MODAL ═══════════ -->
+    <div id="export-name-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9000] hidden flex items-center justify-center">
+        <div class="bg-dropdown border border-divider rounded-xl shadow-2xl w-[320px] overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-divider">
+                <h2 class="text-sm font-semibold text-primary">Export Palette</h2>
+                <button id="export-name-close" class="w-6 h-6 flex items-center justify-center rounded hover:bg-hover text-muted hover:text-primary transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <div class="px-4 py-4">
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1.5">Palette Name</label>
+                <input type="text" id="export-name-input"
+                       class="w-full bg-input border border-divider rounded-md px-3 py-2
+                              text-xs text-primary focus:border-accent focus:outline-none transition-colors"
+                       placeholder="My Palette" maxlength="64" />
+                <div class="flex items-center justify-end gap-2 mt-4">
+                    <button id="export-name-cancel"
+                            class="px-3 py-1.5 text-xs font-medium text-secondary rounded-md
+                                   hover:bg-hover transition-colors">
+                        Cancel
+                    </button>
+                    <button id="export-name-confirm"
+                            class="px-4 py-1.5 text-xs font-semibold text-white bg-accent rounded-md
+                                   hover:bg-accent-hover transition-colors">
+                        Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ PREFERENCES MODAL ═══════════ -->
+    <div id="prefs-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9000] hidden flex items-center justify-center">
+        <div id="prefs-dialog" class="bg-dropdown border border-divider rounded-xl shadow-2xl w-[340px] overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-divider">
+                <h2 class="text-sm font-semibold text-primary">Preferences</h2>
+                <button id="prefs-close" class="w-6 h-6 flex items-center justify-center rounded hover:bg-hover text-muted hover:text-primary transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <div class="px-4 py-4 flex flex-col gap-4">
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1.5">UI Font</label>
+                    <select id="pref-font-family"
+                            class="w-full h-8 bg-input border border-divider rounded-lg px-2.5
+                                   text-xs text-primary focus:border-accent focus:outline-none cursor-pointer">
+                        <option value="'Inter', system-ui, sans-serif">Inter (Default)</option>
+                        <option value="'DM Sans', sans-serif">DM Sans</option>
+                        <option value="'Poppins', sans-serif">Poppins</option>
+                        <option value="'Nunito', sans-serif">Nunito</option>
+                        <option value="'Open Sans', sans-serif">Open Sans</option>
+                        <option value="'Rubik', sans-serif">Rubik</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="'Lato', sans-serif">Lato</option>
+                        <option value="system-ui, -apple-system, sans-serif">System UI</option>
+                        <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1.5">Mono Font</label>
+                    <select id="pref-font-mono"
+                            class="w-full h-8 bg-input border border-divider rounded-lg px-2.5
+                                   text-xs text-primary focus:border-accent focus:outline-none cursor-pointer">
+                        <option value="'JetBrains Mono', monospace">JetBrains Mono (Default)</option>
+                        <option value="'Fira Code', monospace">Fira Code</option>
+                        <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                        <option value="'Cascadia Code', monospace">Cascadia Code</option>
+                        <option value="Consolas, monospace">Consolas</option>
+                        <option value="monospace">System Mono</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1.5">
+                        Font Size <span id="pref-size-label" class="text-primary font-mono">12px</span>
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] text-muted">10</span>
+                        <input id="pref-font-size" type="range" min="10" max="16" value="12" step="1"
+                               class="flex-1 accent-indigo-500" />
+                        <span class="text-[10px] text-muted">16</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 px-4 py-3 border-t border-divider">
+                <button id="prefs-reset" class="px-3 py-1.5 text-[11px] font-medium text-muted hover:text-primary rounded-md hover:bg-hover transition-colors">
+                    Reset Defaults
+                </button>
+                <button id="prefs-apply" class="px-4 py-1.5 text-[11px] font-semibold bg-accent text-white rounded-md hover:opacity-90 transition-opacity">
+                    Apply
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ ABOUT MODAL ═══════════ -->
+    <div id="about-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9000] hidden flex items-center justify-center">
+        <div class="bg-dropdown border border-divider rounded-xl shadow-2xl w-[320px] overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-divider">
+                <h2 class="text-sm font-semibold text-primary">About</h2>
+                <button id="about-close" class="w-6 h-6 flex items-center justify-center rounded hover:bg-hover text-muted hover:text-primary transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <div class="px-5 py-5 flex flex-col items-center text-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-droplet text-xl text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-primary">Jux Color Picker</h3>
+                    <p class="text-[11px] text-muted mt-0.5">Version 1.0.0</p>
+                </div>
+                <p class="text-xs text-secondary leading-relaxed">
+                    A modern, professional color picker application built with the Jux Toolkit framework.
+                    Features a live magnifier, multiple color formats, palette management, and theme support.
+                </p>
+                <div class="w-full border-t border-divider my-1"></div>
+                <div class="flex flex-col gap-1.5 text-xs text-secondary">
+                    <p class="font-semibold text-primary">XTREME SOFTWARE SOLUTIONS (XSS&IT)</p>
+                    <a id="about-github" href="#" class="text-accent hover:underline flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fa-brands fa-github text-sm"></i>
+                        github.com/xdsswar/jux-color-picker
+                    </a>
+                </div>
+                <p class="text-[10px] text-muted mt-1">&copy; 2026 XTREME SOFTWARE SOLUTIONS. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-accent text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xl transition-all duration-300 opacity-0 translate-y-4 pointer-events-none flex items-center gap-2 z-[9999]">
+        <i class="fa-solid fa-clipboard-check"></i>
+        <span id="toast-message">Copied!</span>
+    </div>
+
+</body>
+</html>
