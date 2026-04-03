@@ -135,7 +135,7 @@ window.ColorPicker = (() => {
             if (_draggingAlpha) _handleAlphaMove(e);
         });
         document.addEventListener('mouseup', () => {
-            if (_draggingSB || _draggingHue || _draggingAlpha) commitColor();
+            // Color is committed to history only when user copies (click format box)
             _draggingSB = _draggingHue = _draggingAlpha = false;
         });
     }
@@ -210,7 +210,6 @@ window.ColorPicker = (() => {
                 const parsed = CE.parseColor('#' + hexInput.value);
                 if (parsed) {
                     setColorFromRGB(parsed.r, parsed.g, parsed.b);
-                    commitColor();
                 }
             });
         }
@@ -243,7 +242,6 @@ window.ColorPicker = (() => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener('input', () => { if (!_updating) handler(parseInt(el.value) || 0); });
-        el.addEventListener('change', () => commitColor());
     }
 
     function _setFromRGB(ch, val) {
@@ -294,6 +292,7 @@ window.ColorPicker = (() => {
         if (text && window.ClipboardManager) {
             ClipboardManager.copyToClipboard(text);
             _animateCopy();
+            commitColor();
         }
     }
 
